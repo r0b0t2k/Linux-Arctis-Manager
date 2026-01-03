@@ -1,8 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
 import sys
-import subprocess
-
 from PyInstaller.utils.hooks import collect_submodules
 
 sys.path.append('.')
@@ -10,10 +8,13 @@ sys.path.append('.')
 hiddenimports = ['PyQt6', 'PyQt6.sip']
 hiddenimports += collect_submodules('arctis_manager.devices')
 
-python_ver_p = subprocess.run('python --version', shell=True, check=True, stdout=subprocess.PIPE)
-python_ver = '.'.join(python_ver_p.stdout.decode('utf-8').replace('Python ', '').split('.')[0:2])
-which_python_p = subprocess.run('which python', shell=True, check=True, stdout=subprocess.PIPE)
-pyqt6_path = Path(which_python_p.stdout.decode('utf-8')).parent.parent.joinpath('lib64', f'python{python_ver}', 'site-packages', 'PyQt6', 'Qt6')
+try:
+    import PyQt6
+except ImportError as exc:
+    raise SystemExit("PyQt6 must be installed to build arctis-manager") from exc
+
+# Resolve the Qt6 directory within the installed PyQt6 package (handles lib vs lib64 layouts)
+pyqt6_path = Path(PyQt6.__file__).parent.joinpath('Qt6')
 
 print(str(pyqt6_path))
 
